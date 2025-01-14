@@ -15,6 +15,7 @@ require "script.train"
 require "script.entity"
 require "script.gui"
 require "script.gui_disp"
+require "script.interface" -- defines public interface for other mods
 
 script.on_init(function()
     storageInit()

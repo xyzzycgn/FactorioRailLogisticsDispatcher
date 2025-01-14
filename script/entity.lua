@@ -1484,6 +1484,40 @@ function dispUpdateTransit(disp, correctSignals)
     disp.transit = newTransit
 end
 
+-- extract the essence of trainstop data for usage in other mods
+local function trainStops()
+    local ts = {
+        trainstops = {}
+    }
+
+    for k,v in pairs(storage.activeDisps) do
+        local trainstop = {}
+        if (v.settings.modeDepot) then
+            trainstop.depot = true
+        end
+        if (v.settings.modeEndpoint) then
+            trainstop.endpoint = true
+        end
+        trainstop.network = v.network
+        trainstop.minTrainLength = v.minTrainLength
+        trainstop.maxTrainLength = v.maxTrainLength
+        trainstop.station = v.stopEntity
+        trainstop.lastUpdateTick = v.lastUpdateTick
+
+        ts.trainstops[k] = trainstop
+    end
+
+    ts.tick = game.tick
+
+    return ts
+end
+
+-- deliver the essence of trainstop data to other mods
+local function raiseEvent4Trainstops()
+    script.raise_event(on_trainstops_updated_event, trainStops())
+end
+
+
 function globalTick()
     --[[DEBUG_BEGIN]]
     for _, disp in pairs(storage.disps) do
@@ -1521,6 +1555,9 @@ function globalUpdateTimer()
     if storage.activeDisps and table_size(storage.activeDisps) > 0 then
         script.on_nth_tick(updateTicks, globalTick)
     end
+
+    -- raise events for other mods
+    script.on_nth_tick(updateOtherMods, raiseEvent4Trainstops)
 end
 
 ---@param disp DispClass

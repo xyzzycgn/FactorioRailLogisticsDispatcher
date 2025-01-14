@@ -15,6 +15,12 @@ unloadOrCondZeros = false
 
 debugMode = false
 
+
+--- frequency for updating other mods (in ticks)
+--- default 60 = once per second
+---@type number
+updateOtherMods = 60
+
 function configUpdate()
     minEnergyUseTrain = settings.global["viirld-minEnergyUseTrainMJ"].value * 1000000
     minEnergyUseTrainMJ = settings.global["viirld-minEnergyUseTrainMJ"].value
@@ -36,4 +42,6 @@ function configUpdate()
     end
 
     debugMode = settings.global["viirld-debug"].value
+
+    updateOtherMods = settings.global["viirld-updateModTicks"].value
 end

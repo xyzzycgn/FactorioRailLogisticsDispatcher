@@ -72,4 +72,13 @@ data:extend({
     setting_type = "runtime-global",
     default_value = false
   },
+  {
+    type = "int-setting",
+    name = "viirld-updateModTicks",
+    order = "ba",
+    setting_type = "runtime-global",
+    default_value = 60,
+    minimum_value = 60,
+    maximum_value = 300,
+  },
 })
