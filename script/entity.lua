@@ -1501,7 +1501,8 @@ local function trainStops()
         trainstop.network = v.network
         trainstop.minTrainLength = v.minTrainLength
         trainstop.maxTrainLength = v.maxTrainLength
-        trainstop.station = v.stopEntity
+        trainstop.station = v.stopName
+        trainstop.stoppedTrain = v.stoppedTrain and v.stoppedTrain.id
         trainstop.lastUpdateTick = v.lastUpdateTick
 
         ts.trainstops[k] = trainstop
