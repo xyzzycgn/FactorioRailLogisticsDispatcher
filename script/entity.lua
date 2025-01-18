@@ -1484,6 +1484,37 @@ function dispUpdateTransit(disp, correctSignals)
     disp.transit = newTransit
 end
 
+-- translate internal representation to sth more common
+local trans =  {
+}
+trans[COMBINATOR_COLOR_OFF] = "black"
+trans[COMBINATOR_COLOR_RED] = "red"
+trans[COMBINATOR_COLOR_WHITE] = "white"
+trans[COMBINATOR_COLOR_GREEN] = "green"
+trans[COMBINATOR_COLOR_AQUA] = "cyan" -- flib uses this name
+trans[COMBINATOR_COLOR_YELLOW] = "yellow"
+
+local function translate(entity)
+    local b = entity.get_or_create_control_behavior()
+
+    -- just to be sure
+    if (b) then
+        local p = b.parameters
+        if (p) then
+            local c = p.conditions[1]
+            if (c) then
+                local cmp = c.comparator
+                if (cmp) then
+                    return trans[cmp]
+                end
+            end
+        end
+    end
+
+    -- used if any of the chained fields is nil
+    return trans[COMBINATOR_COLOR_OFF]
+end
+
 -- extract the essence of trainstop data for usage in other mods
 local function trainStops()
     local ts = {
@@ -1498,7 +1529,11 @@ local function trainStops()
         if (v.settings.modeEndpoint) then
             trainstop.endpoint = true
         end
-        trainstop.network = v.network
+        local entity = v.entity
+
+        trainstop.entity = entity -- TODO no longer needed? remove?
+        trainstop.color = translate(entity)
+        trainstop.network = v.settings.network
         trainstop.minTrainLength = v.minTrainLength
         trainstop.maxTrainLength = v.maxTrainLength
         trainstop.station = v.stopName
