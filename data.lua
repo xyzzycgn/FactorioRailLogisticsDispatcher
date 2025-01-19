@@ -62,6 +62,8 @@ do
     entity.selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } }
     entity.collision_box = { { -0.25, -0.25 }, { 0.25, 0.25 } }
     entity.energy_source = { type = "void" }
+    -- needed to use game.get_entity_by_unit_number(unit_number)
+    entity.flags[#entity.flags + 1] = "get-by-unit-number"
     entity.additional_pastable_entities = { "viirld-dispatcher" }
     local function sprite(x)
         local s = table.deepcopy(data.raw["lamp"]["small-lamp"].picture_off)

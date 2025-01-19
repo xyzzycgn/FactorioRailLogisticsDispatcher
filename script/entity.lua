@@ -1540,6 +1540,11 @@ local function trainStops()
         trainstop.stoppedTrain = v.stoppedTrain and v.stoppedTrain.id
         trainstop.lastUpdateTick = v.lastUpdateTick
 
+        trainstop.signals = v.signals
+        trainstop.transit = v.transit
+        trainstop.errors = v.errors
+        trainstop.paused = v._isPaused
+
         ts.trainstops[k] = trainstop
     end
 
