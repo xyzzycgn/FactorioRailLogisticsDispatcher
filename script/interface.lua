@@ -6,11 +6,15 @@
 
 -- must be global
 on_trainstops_updated_event = script.generate_event_name()
-log("register update events for mods: "..on_trainstops_updated_event)
+log("registered on_trainstops_updated_event: " .. on_trainstops_updated_event)
+on_deliveries_updated_event = script.generate_event_name()
+log("registered on_deliveries_updated_event: " .. on_deliveries_updated_event)
 
--- allows mods to register for update events
+-- allows other mods to register for update events
 remote.add_interface("RailLogisticsDispatcher", {
   -- updates for trainstops
   on_trainstops_updated = function() return on_trainstops_updated_event end,
+  -- updates for deliveries
+  on_deliveries_updated = function() return on_deliveries_updated_event end,
 })
 

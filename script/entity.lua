@@ -1515,8 +1515,32 @@ local function translate(entity)
     return trans[COMBINATOR_COLOR_OFF]
 end
 
--- extract the essence of trainstop data for usage in other mods
-local function trainStops()
+-- determine active deliveries
+local function deliveries()
+    local d = {
+        deliveries = {}
+    }
+
+    for k, v in pairs(storage.deliveries) do
+        local delivery = {}
+        delivery.uid = k
+        delivery.requester = v.requester and v.requester.uid
+        delivery.provider = v.provider and v.provider.uid
+        delivery.requesterPassedTick = v.requesterPassedTick
+        delivery.providerPassedTick = v.providerPassedTick
+        delivery.contents = v.contents
+        delivery.startTick = v.startTick
+
+        d.deliveries[k] = delivery
+    end
+
+    return d
+end
+
+--- extract the essence of trainstop data for usage in other mods
+--- @param deliveries table<DeliveryUid, DeliveryClass> list of active deliveries hold in storage
+--- @return  TrainStopsEvent, table<DeliveryUid, DeliveryClass>
+local function trainStops(deliveries)
     local ts = {
         trainstops = {}
     }
@@ -1531,31 +1555,54 @@ local function trainStops()
         end
         local entity = v.entity
 
-        trainstop.entity = entity -- TODO no longer needed? remove?
+        trainstop.dispatcher_unit_number = entity.unit_number
         trainstop.color = translate(entity)
         trainstop.network = v.settings.network
-        trainstop.minTrainLength = v.minTrainLength
-        trainstop.maxTrainLength = v.maxTrainLength
+        trainstop.minTrainLength = v.settings.minTrainLength
+        trainstop.maxTrainLength = v.settings.maxTrainLength
         trainstop.station = v.stopName
         trainstop.stoppedTrain = v.stoppedTrain and v.stoppedTrain.id
         trainstop.lastUpdateTick = v.lastUpdateTick
 
         trainstop.signals = v.signals
-        trainstop.transit = v.transit
         trainstop.errors = v.errors
         trainstop.paused = v._isPaused
+
+        trainstop.stat = v.stat
+        trainstop.visits = v.statTrains
+        local delivery = v.delivery
+        -- merge (un)loading deliveries
+        if delivery then
+            local uid = delivery.uid
+            deliveries.deliveries[uid] = {
+                uid = uid,
+                requester = delivery.requester and delivery.requester.entity.unit_number,
+                provider = delivery.provider and delivery.provider.entity.unit_number,
+                requesterPassedTick = delivery.requesterPassedTick,
+                providerPassedTick = delivery.providerPassedTick,
+                contents = delivery.contents,
+                startTick = delivery.startTick,
+                at = entity.unit_number,
+            }
+        end
 
         ts.trainstops[k] = trainstop
     end
 
     ts.tick = game.tick
+    deliveries.tick = game.tick
 
-    return ts
+    return ts, deliveries
 end
 
 -- deliver the essence of trainstop data to other mods
-local function raiseEvent4Trainstops()
-    script.raise_event(on_trainstops_updated_event, trainStops())
+local function raiseEvent4Trainstops(trainStops)
+    script.raise_event(on_trainstops_updated_event, trainStops)
+end
+
+-- deliver the essence of delivery data to other mods
+local function raiseEvent4Deliveries(deliveries)
+    script.raise_event(on_deliveries_updated_event, deliveries)
 end
 
 
@@ -1591,6 +1638,21 @@ function globalTick()
     end
 end
 
+
+local function analyzeData()
+    local deliveries = deliveries()
+    return trainStops(deliveries)
+end
+
+
+local function raiseAll()
+    local trainstops, deliveries = analyzeData()
+
+    raiseEvent4Trainstops(trainstops)
+    raiseEvent4Deliveries(deliveries)
+end
+
+
 function globalUpdateTimer()
     script.on_nth_tick(nil)
     if storage.activeDisps and table_size(storage.activeDisps) > 0 then
@@ -1598,7 +1660,7 @@ function globalUpdateTimer()
     end
 
     -- raise events for other mods
-    script.on_nth_tick(updateOtherMods, raiseEvent4Trainstops)
+    script.on_nth_tick(updateOtherMods, raiseAll)
 end
 
 ---@param disp DispClass
