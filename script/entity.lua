@@ -1484,16 +1484,18 @@ function dispUpdateTransit(disp, correctSignals)
     disp.transit = newTransit
 end
 
--- translate internal representation to sth more common
+-- translation table for transforming internal representation to sth more common
 local trans =  {
+    [COMBINATOR_COLOR_OFF]    = "black",
+    [COMBINATOR_COLOR_RED]    = "red",
+    [COMBINATOR_COLOR_WHITE]  = "white",
+    [COMBINATOR_COLOR_GREEN]  = "green",
+    [COMBINATOR_COLOR_AQUA]   = "cyan", -- flib uses this name, not aqua
+    [COMBINATOR_COLOR_YELLOW] = "yellow",
 }
-trans[COMBINATOR_COLOR_OFF] = "black"
-trans[COMBINATOR_COLOR_RED] = "red"
-trans[COMBINATOR_COLOR_WHITE] = "white"
-trans[COMBINATOR_COLOR_GREEN] = "green"
-trans[COMBINATOR_COLOR_AQUA] = "cyan" -- flib uses this name
-trans[COMBINATOR_COLOR_YELLOW] = "yellow"
 
+--- translate internal representation to sth more common
+--- @param entity LuaEntity@
 local function translate(entity)
     local b = entity.get_or_create_control_behavior()
 
@@ -1515,7 +1517,8 @@ local function translate(entity)
     return trans[COMBINATOR_COLOR_OFF]
 end
 
--- determine active deliveries
+--- determine active deliveries
+--- @return DeliveriesEvent@
 local function deliveries()
     local d = {
         deliveries = {}
@@ -1538,8 +1541,9 @@ local function deliveries()
 end
 
 --- extract the essence of trainstop data for usage in other mods
---- @param deliveries table<DeliveryUid, DeliveryClass> list of active deliveries hold in storage
---- @return  TrainStopsEvent, table<DeliveryUid, DeliveryClass>
+--- if applicable add those deliveries actual (un)loading at a station to deliveries
+--- @param deliveries DeliveriesEvent@ list of active deliveries hold in storage
+--- @return TrainStopsEvent, DeliveriesEvent@
 local function trainStops(deliveries)
     local ts = {
         trainstops = {}
@@ -1595,12 +1599,14 @@ local function trainStops(deliveries)
     return ts, deliveries
 end
 
--- deliver the essence of trainstop data to other mods
+--- deliver the essence of trainstop data to other mods
+--- @param trainStops TrainStopsEvent@
 local function raiseEvent4Trainstops(trainStops)
     script.raise_event(on_trainstops_updated_event, trainStops)
 end
 
--- deliver the essence of delivery data to other mods
+--- deliver the essence of delivery data to other mods
+--- @param deliveries DeliveriesEvent@
 local function raiseEvent4Deliveries(deliveries)
     script.raise_event(on_deliveries_updated_event, deliveries)
 end
@@ -1638,13 +1644,14 @@ function globalTick()
     end
 end
 
-
+--- calculate TrainStopsEvent and DeliveriesEvent for next raising
 local function analyzeData()
     local deliveries = deliveries()
     return trainStops(deliveries)
 end
 
 
+--- raise TrainStopsEvent and DeliveriesEvent
 local function raiseAll()
     local trainstops, deliveries = analyzeData()
 
