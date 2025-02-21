@@ -645,7 +645,7 @@ local function entityHandleRemoveStop(entity)
         radius = 2,
     })
     for _, d in pairs(dispatchers) do
-        if d.valid and d ~= entity then
+        if d.valid and d ~= entity and not d.is_registered_for_deconstruction(d.force) then
             dispUpdateStop(storage.disps[d.unit_number], entity)
         end
     end
@@ -707,6 +707,22 @@ function dispSetSettings(disp, settings)
     dispUpdate(disp, false, false, true)
 end
 
+---@param name string
+---@param surface LuaSurface
+---@param force LuaForce
+---@param exceptStopEntity LuaEntity | nil
+function hasStopWithName(name, surface, force, exceptStopEntity)
+    local stops = game.train_manager.get_train_stops {
+        surface = surface,
+        force = force,
+        station_name = name
+    }
+    if exceptStopEntity and #stops == 1 and stops[1] == exceptStopEntity then
+        return false
+    end
+    return #stops > 0
+end
+
 ---@param disp DispClass
 function dispUpdateStopName(disp)
     if not disp.stopEntity then
@@ -719,17 +735,6 @@ function dispUpdateStopName(disp)
 
     local newName
     if disp.settings.modeEndpoint then
-        local allStops = disp.stopEntity.surface.find_entities_filtered {
-            type = disp.stopEntity.type,
-            force = disp.stopEntity.force,
-        }
-        local existsOtherNames = {}
-        for _, stop in pairs(allStops) do
-            if stop ~= disp.stopEntity then
-                existsOtherNames[stop.backer_name] = true
-            end
-        end
-
         local template = disp.settings.stationTemplate
         local pos = disp.stopEntity.position
         template = template:gsub("%%x", pos.x)
@@ -747,7 +752,7 @@ function dispUpdateStopName(disp)
         template = "^" .. template .. "$"
 
         local currentName = disp.stopEntity.backer_name
-        if currentName:match(template) and not existsOtherNames[currentName] then
+        if currentName:match(template) and not hasStopWithName(currentName, disp.stopEntity.surface, disp.stopEntity.force, disp.stopEntity) then
             -- old name is ok
             return
         end
@@ -757,7 +762,7 @@ function dispUpdateStopName(disp)
             newName = preReplacedTemplate:gsub("%%d", tostring(i))
             newName = newName:gsub("%%s", "blabla" .. tostring(i))
             i = i + 1
-            if not existsOtherNames[newName] then
+            if not hasStopWithName(newName, disp.stopEntity.surface, disp.stopEntity.force, disp.stopEntity) then
                 break
             end
         end

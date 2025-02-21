@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.24
+Date: 21.02.2025
+  Changes:
+    - Cargo wagon quality support (fluid still not).
+  Bugfixes:
+    - Fixed: Freeze when gui closing with Station name option.
+    - Fixed: Error related to continuing work of the dispatcher marked for deletion.
+---------------------------------------------------------------------------------------------------
 Version: 2.0.23
 Date: 06.12.2024
   Bugfixes:

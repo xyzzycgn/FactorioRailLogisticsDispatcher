@@ -274,6 +274,9 @@ function getTrainType(train)
     for _, car in ipairs(train.carriages) do
         if car.type == "cargo-wagon" or car.type == "fluid-wagon" then
             local name = wagonSimpleNames[car.name] or car.name
+            if car.quality.name ~= defaultQuality then
+                name = name .. "," .. car.quality.name
+            end
             if #nameBuffer > 0 and nameBuffer[#nameBuffer] == name then
                 local old = nameBuffer[#nameBuffer - 1]
                 nameBuffer[#nameBuffer - 1] = (old == "") and 2 or (old + 1)
@@ -295,7 +298,10 @@ function getTrainType(train)
             carriages = {},
         }
         for _, car in pairs(train.carriages) do
-            trainTypeInfo.carriages[#trainTypeInfo.carriages + 1] = car.name
+            trainTypeInfo.carriages[#trainTypeInfo.carriages + 1] = {
+                name = car.name,
+                quality = car.quality.name,
+            }
         end
         refreshTrainTypeInfo(trainTypeInfo)
         storage.trainTypes[name] = trainTypeInfo
@@ -313,12 +319,18 @@ function refreshTrainTypeInfo(trainTypeInfo)
     trainTypeInfo.fluidCapacityPerWagons = {}
 
     for _, car in pairs(trainTypeInfo.carriages) do
-        local proto = prototypes.entity[car]
+        if type(car) == "string" then
+            car = {
+                name = car,
+                quality = defaultQuality,
+            }
+        end
+        local proto = prototypes.entity[car.name]
         if not proto then
             return false
         else
             if proto.type == "cargo-wagon" then
-                local stackCount = proto.get_inventory_size(defines.inventory.cargo_wagon)
+                local stackCount = proto.get_inventory_size(defines.inventory.cargo_wagon, car.quality)
                 if stackCount and stackCount > 0 then
                     trainTypeInfo.itemWagonCount = trainTypeInfo.itemWagonCount + 1
                     trainTypeInfo.itemCapacity = trainTypeInfo.itemCapacity + stackCount

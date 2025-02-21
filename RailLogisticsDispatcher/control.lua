@@ -119,6 +119,7 @@ end
 local builtFilter = { { filter = "type", type = "train-stop" }, { filter = "name", name = "viirld-dispatcher" } }
 script.on_event(defines.events.on_built_entity, onEntityBuilt, builtFilter)
 script.on_event(defines.events.on_robot_built_entity, onEntityBuilt, builtFilter)
+script.on_event(defines.events.on_cancelled_deconstruction, onEntityBuilt, builtFilter)
 script.on_event({ defines.events.script_raised_built, defines.events.script_raised_revive }, onEntityBuilt)
 
 ---@param event OnPlayerMinedEntity|OnEntityDied|OnRobotMinedEntity|ScriptRaisedDestroy
@@ -128,6 +129,7 @@ script.on_event(
             defines.events.on_entity_died,
             defines.events.on_robot_mined_entity,
             defines.events.script_raised_destroy,
+            defines.events.on_marked_for_deconstruction,
         },
         function(event)
             local entity = event.entity

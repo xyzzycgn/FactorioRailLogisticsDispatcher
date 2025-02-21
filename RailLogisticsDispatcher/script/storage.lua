@@ -17,7 +17,7 @@
 ---@field itemWagonCount number
 ---@field fluidCapacity number
 ---@field fluidCapacityPerWagons number[]
----@field carriages string[] @ Entity names from configuration refreshing
+---@field carriages string[] | { name: string, quality: string }[] @ Entity names from configuration refreshing
 
 ---@alias DispNetwork uint
 
